@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "target": "ES5",
+        "module": "commonjs",
+        "sourceMap": true,
+        "outDir": "dist",
+        "allowJs": true,
+        "strictNullChecks": true,
+        "noImplicitAny": true,
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "lib": [
+            "es5",
+            "dom",
+            "scripthost"
+        ]
+    }
+}
