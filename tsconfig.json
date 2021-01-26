@@ -5,10 +5,12 @@
         "sourceMap": true,
         "outDir": "dist",
         "allowJs": true,
-        "strictNullChecks": true,
+        "strictNullChecks": false,
         "noImplicitAny": true,
         "removeComments": true,
         "preserveConstEnums": true,
+        "esModuleInterop": true,
+        "experimentalDecorators": true,
         "lib": [
             "es5",
             "dom",

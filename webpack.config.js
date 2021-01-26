@@ -8,7 +8,7 @@ module.exports = {
     devtool: 'inline-source-map',
     
     entry: {
-        game: "./src/js/game.ts"
+        game: "./src/js/client/game.ts"
     },
     
     resolve: {

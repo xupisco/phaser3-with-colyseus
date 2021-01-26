@@ -1,4 +1,4 @@
-import '../scss/game.scss';
+import '../../scss/game.scss';
 import { SampleScene } from './scenes/sample_scene';
 
 const gameConfig: Phaser.Types.Core.GameConfig = {
