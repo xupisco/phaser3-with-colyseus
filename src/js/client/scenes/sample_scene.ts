@@ -1,3 +1,5 @@
+import * as Colyseus from 'colyseus.js';
+
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
     visible: false,
@@ -5,32 +7,34 @@ const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
 };
 
 export class SampleScene extends Phaser.Scene {
+    private client: Colyseus.Client;
+    
     constructor() {
         super(sceneConfig);
     }
     
-    public preload () {
-        this.load.setBaseURL('https://labs.phaser.io');
-
-        this.load.image('logo', 'assets/sprites/phaser3-logo.png');
-        this.load.image('red', 'assets/particles/red.png');
+    init() {
+        this.client = new Colyseus.Client('ws://localhost:2567');
     }
     
-    public create() {
-        let particles = this.add.particles('red');
-
-        let emitter = particles.createEmitter({
-            speed: 100,
-            scale: { start: 1, end: 0 },
-            blendMode: 'SCREEN'
-        });
-
-        let logo = this.physics.add.image(400, 100, 'logo');
-
-        logo.setVelocity(510, 200);
-        logo.setBounce(1, 1);
-        logo.setCollideWorldBounds(true);
-
-        emitter.startFollow(logo);
+    preload () {
+        this.load.setBaseURL('https://labs.phaser.io');
+        this.load.image('logo', 'assets/sprites/phaser3-logo.png');
+    }
+    
+    async create() {
+        const room = await this.client.joinOrCreate('my_room');
+        const logo = this.physics.add.image(400, 100, 'logo');
+        
+        console.log(room.sessionId);
+        
+        room.onMessage('keydown', (message: string) => {
+            console.log(message);
+            logo.x += 10;
+        })
+        
+        this.input.keyboard.on('keydown', (e: KeyboardEvent) => {
+            room.send('keydown', e.key);
+        })
     }
 }
