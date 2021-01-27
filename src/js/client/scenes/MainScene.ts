@@ -1,4 +1,5 @@
 import * as Colyseus from 'colyseus.js';
+import StateMachine from '../../../shared/statemachine/StateMachine';
 import { IBoardState } from '../../../typings/IBoardState';
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
@@ -16,6 +17,7 @@ const pieceOffset = [
 
 export class MainScene extends Phaser.Scene {
     private client: Colyseus.Client;
+    private stateMachine!: StateMachine;
     
     constructor() {
         super(sceneConfig);
@@ -23,6 +25,14 @@ export class MainScene extends Phaser.Scene {
     
     init() {
         this.client = new Colyseus.Client('ws://localhost:2567');
+        
+        this.stateMachine = new StateMachine(this, 'game');
+        this.stateMachine.addState('idle')
+            .addState('dice-roll', {
+                onEnter: this.handleDiceRollEnter,
+                onUpdate: this.handleDiceRollUpdate
+            })
+            .setState('idle');
     }
     
     preload () {
@@ -55,9 +65,21 @@ export class MainScene extends Phaser.Scene {
         })
         
         this.input.keyboard.on('keyup-SPACE', (e: KeyboardEvent) => {
-
+            this.stateMachine.setState('dice-roll');
             console.log(e);
         })
+    }
+    
+    update(t: number, dt: number) {
+        this.stateMachine.update(dt);
+    }
+    
+    private handleDiceRollEnter() {
+        console.log('Dice roll enter...');
+    }
+    
+    private handleDiceRollUpdate(dt: number) {
+        console.log('Dice roll update...');
     }
     
     private handleInitialStatestate(state: IBoardState, cx: number, cy: number) {
@@ -77,7 +99,6 @@ export class MainScene extends Phaser.Scene {
                     case 3:
                         this.add.image(cx + offset.x, cy + offset.y, 'yellow-piece');
                         break;
-                        
                 }
             });
         });

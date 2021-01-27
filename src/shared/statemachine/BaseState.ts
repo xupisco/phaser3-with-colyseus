@@ -1,5 +1,5 @@
 export default abstract class BaseState {
-    abstract onEnter();
-    abstract onUpdate(dt: number);
-    abstract onExit();
+    abstract onEnter?: () => void;
+    abstract onUpdate?: (dt: number) => void;
+    abstract onExit?: () => void;
 }
