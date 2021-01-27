@@ -1,5 +1,5 @@
 import '../../scss/game.scss';
-import { SampleScene } from './scenes/sample_scene';
+import { MainScene } from './scenes/MainScene';
 
 const gameConfig: Phaser.Types.Core.GameConfig = {
     title: 'Hello TS World',
@@ -19,7 +19,7 @@ const gameConfig: Phaser.Types.Core.GameConfig = {
     
     transparent: true,
     parent: 'game_container',
-    scene:  SampleScene,
+    scene:  MainScene,
 };
 
 export const game = new Phaser.Game(gameConfig);
