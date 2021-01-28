@@ -1,6 +1,8 @@
 import * as Colyseus from 'colyseus.js';
 import StateMachine from '../../../shared/statemachine/StateMachine';
+import { ClientMessage } from '../../../typings/ClientMessage';
 import { IBoardState } from '../../../typings/IBoardState';
+import { ServerMessage } from '../../../typings/ServerMessage';
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -19,6 +21,10 @@ export class MainScene extends Phaser.Scene {
     private client: Colyseus.Client;
     private stateMachine!: StateMachine;
     
+    private room!: Colyseus.Room<IBoardState>;
+    private dice!: Phaser.GameObjects.Sprite;
+    private diceRollAnimationAccumulator: number = 0;
+    
     constructor() {
         super(sceneConfig);
     }
@@ -31,6 +37,9 @@ export class MainScene extends Phaser.Scene {
             .addState('dice-roll', {
                 onEnter: this.handleDiceRollEnter,
                 onUpdate: this.handleDiceRollUpdate
+            })
+            .addState('dice-roll-finish', {
+                onEnter: this.handleDiceRollFinishEnter
             })
             .setState('idle');
     }
@@ -50,23 +59,23 @@ export class MainScene extends Phaser.Scene {
         const { width, height } = this.scale;
         const cx = width * 0.5;
         const cy = height * 0.5;
-        const room = await this.client.joinOrCreate<IBoardState>('board');
         
-        const dice = this.add.sprite(cx, cy, 'dice-image-6');
+        this.room = await this.client.joinOrCreate<IBoardState>('board');
+        this.dice = this.add.sprite(cx, cy, 'dice-image-6');
         
-        console.log(room.sessionId);
+        console.log(this.room.sessionId);
         
-        room.onStateChange.once(state => {
+        this.room.onStateChange.once(state => {
             this.handleInitialStatestate(state, cx, cy);
         });
         
-        room.onMessage('keydown', (message: string) => {
+        this.room.onMessage('keydown', (message: string) => {
             console.log(message);
         })
         
         this.input.keyboard.on('keyup-SPACE', (e: KeyboardEvent) => {
             this.stateMachine.setState('dice-roll');
-            console.log(e);
+            //console.log(e);
         })
     }
     
@@ -75,11 +84,44 @@ export class MainScene extends Phaser.Scene {
     }
     
     private handleDiceRollEnter() {
-        console.log('Dice roll enter...');
+        // Send message to server
+        this.room.send(ClientMessage.DiceRoll);
+        
+        const value = Phaser.Math.Between(1, 6);
+        this.dice.setTexture(`dice-image-${value}`);
+        this.diceRollAnimationAccumulator = 0;
+        
+        // Await response
+        this.room.state.onChange = (changes => {
+            changes.forEach(change => {
+                if (change.field !== 'lastDiceValue') {
+                    return;
+                }
+                
+                this.room.state.onChange = undefined;
+                this.time.delayedCall(1000, () =>
+                    this.stateMachine.setState('dice-roll-finish')
+                );
+            })
+        })
+        
+        //this.room.onMessage(ServerMessage.DiceRollResult, diceValue => {
+        //    this.dice.setTexture(`dice-image-${diceValue}`);
+        //})
     }
     
     private handleDiceRollUpdate(dt: number) {
-        console.log('Dice roll update...');
+        this.diceRollAnimationAccumulator += dt;
+        if (this.diceRollAnimationAccumulator >= 150) {
+            const value = Phaser.Math.Between(1, 6);
+            this.dice.setTexture(`dice-image-${value}`);
+            
+            this.diceRollAnimationAccumulator = 0;
+        }
+    }
+    
+    private handleDiceRollFinishEnter() {
+        this.dice.setTexture(`dice-image-${this.room.state.lastDiceValue}`);
     }
     
     private handleInitialStatestate(state: IBoardState, cx: number, cy: number) {

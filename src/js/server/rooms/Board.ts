@@ -1,7 +1,10 @@
+import randomInt from "../../../shared/math/random";
 import { Room, Client } from "colyseus";
+import { ClientMessage } from "../../../typings/ClientMessage";
+import { ServerMessage } from "../../../typings/ServerMessage";
 import { BoardState } from "./schema/BoardState";
 
-export class Board extends Room {
+export class Board extends Room<BoardState> {
     onCreate (options: any) {
         this.setState(new BoardState());
         
@@ -9,6 +12,11 @@ export class Board extends Room {
             this.broadcast('keydown', message, {
                 except: client
             })
+        });
+        
+        this.onMessage(ClientMessage.DiceRoll, (client, message) => {
+            const value = randomInt(1, 7);
+            this.state.lastDiceValue = value;
         });
     }
     

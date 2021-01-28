@@ -36,6 +36,9 @@ export class BoardState extends Schema implements IBoardState {
     @type([PlayerState])
     playerStates: PlayerState[];
     
+    @type('number')
+    lastDiceValue = 0;
+    
     constructor() {
         super();
         
